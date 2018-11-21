@@ -4,9 +4,9 @@ import re
 
 import numpy as np
 
-import torch
-
 from collections import Counter
+
+import torch
 
 from represent import sent2ind
 
@@ -17,14 +17,10 @@ from encode import load_encode
 from util import load_word_re, load_type_re, load_pair, word_replace, map_item
 
 
-device_str = 'cuda' if torch.cuda.is_available() else 'cpu'
-device = torch.device(device_str)
-
-
 def load_match(name):
-    model = torch.load(map_item(name, paths), map_location=device_str)
+    model = torch.load(map_item(name, paths), map_location='cpu')
     full_dict = model.state_dict()
-    match = Match().to(device)
+    match = Match()
     match_dict = match.state_dict()
     part_dict = {key: val for key, val in full_dict.items() if key in match_dict}
     match_dict.update(part_dict)
@@ -88,14 +84,19 @@ def predict(text, name, vote):
     text = word_replace(text, homo_dict)
     text = word_replace(text, syno_dict)
     core_sents = map_item(name, caches)
+    core_sents = torch.Tensor(core_sents)
     pad_seq = sent2ind(text, word_inds, seq_len, oov_ind, keep_oov=True)
     sent = torch.LongTensor([pad_seq])
     encode = map_item(name + '_encode', models)
-    encode_seq = encode.predict([pad_seq])
-    encode_mat = np.repeat(encode_seq, len(core_sents), axis=0)
+    with torch.no_grad():
+        encode_seq = encode(sent)
+    encode_mat = encode_seq.repeat(len(core_sents), 1)
     model = map_item(name + '_match', models)
-    probs = model.predict([encode_mat, core_sents])
-    probs = np.reshape(probs, (1, -1))[0]
+    with torch.no_grad():
+        model.eval()
+        probs = torch.sigmoid(model(encode_mat, core_sents))
+    probs = probs.numpy()
+    probs = np.squeeze(probs, axis=-1)
     max_probs = sorted(probs, reverse=True)[:vote]
     max_inds = np.argsort(-probs)[:vote]
     max_preds = [core_labels[ind] for ind in max_inds]
