@@ -3,7 +3,7 @@ import time
 import pickle as pk
 
 import torch
-from torch.nn import BCELoss
+from torch.nn import BCEWithLogitsLoss
 from torch.optim import Adam
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -89,7 +89,7 @@ def fit(name, max_epoch, embed_mat, path_feats, detail):
     seq_len = len(train_pairs[0][0])
     arch = map_item(name, archs)
     model = arch(embed_mat, seq_len).to(device)
-    loss_func = BCELoss()
+    loss_func = BCEWithLogitsLoss()
     learn_rate, min_rate = 1e-3, 1e-5
     min_dev_loss = float('inf')
     trap_count, max_count = 0, 5

@@ -15,8 +15,7 @@ class Dnn(nn.Module):
         self.match1 = nn.Sequential(nn.Linear(800, 200),
                                     nn.ReLU())
         self.match2 = nn.Sequential(nn.Dropout(0.2),
-                                    nn.Linear(200, 1),
-                                    nn.Sigmoid())
+                                    nn.Linear(200, 1))
 
     def forward(self, x, y):
         x = self.embed(x)
@@ -72,8 +71,7 @@ class Cnn(nn.Module):
         self.match1 = nn.Sequential(nn.Linear(800, 200),
                                     nn.ReLU())
         self.match2 = nn.Sequential(nn.Dropout(0.2),
-                                    nn.Linear(200, 1),
-                                    nn.Sigmoid())
+                                    nn.Linear(200, 1))
 
     def forward(self, x, y):
         x = self.embed(x)
@@ -138,8 +136,7 @@ class Rnn(nn.Module):
         self.match1 = nn.Sequential(nn.Linear(800, 200),
                                     nn.ReLU())
         self.match2 = nn.Sequential(nn.Dropout(0.2),
-                                    nn.Linear(200, 1),
-                                    nn.Sigmoid())
+                                    nn.Linear(200, 1))
 
     def forward(self, x, y):
         x = self.embed(x)
@@ -175,8 +172,7 @@ class Match(nn.Module):
         self.match1 = nn.Sequential(nn.Linear(800, 200),
                                     nn.ReLU())
         self.match2 = nn.Sequential(nn.Dropout(0.2),
-                                    nn.Linear(200, 1),
-                                    nn.Sigmoid())
+                                    nn.Linear(200, 1))
 
     def forward(self, x, y):
         diff = torch.abs(x - y)
