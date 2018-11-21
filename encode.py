@@ -11,16 +11,12 @@ from nn_arch import DnnEncode, CnnEncode, RnnEncode
 from util import flat_read, map_item
 
 
-device_str = 'cuda' if torch.cuda.is_available() else 'cpu'
-device = torch.device(device_str)
-
-
 def load_encode(name, embed_mat, seq_len):
     embed_mat = torch.Tensor(embed_mat)
-    model = torch.load(map_item(name, paths), map_location=device_str)
+    model = torch.load(map_item(name, paths), map_location='cpu')
     full_dict = model.state_dict()
     arch = map_item(name, archs)
-    encode = arch(embed_mat, seq_len).to(device)
+    encode = arch(embed_mat, seq_len)
     encode_dict = encode.state_dict()
     part_dict = {key: val for key, val in full_dict.items() if key in encode_dict}
     encode_dict.update(part_dict)
@@ -88,7 +84,7 @@ def cache(path_sent, path_train, path_label):
             model.eval()
             encode_mat = list()
             for sents in sent_mat:
-                sents = torch.LongTensor(sents).to(device)
+                sents = torch.LongTensor(sents)
                 encode_mat.append(model(sents))
         core_sents = cluster(encode_mat, core_nums)
         path_cache = map_item(name + '_cache', paths)
