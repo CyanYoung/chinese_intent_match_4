@@ -2,7 +2,7 @@ import pickle as pk
 
 import numpy as np
 
-from keras.models import load_model
+import torch
 
 from sklearn.metrics import accuracy_score
 
@@ -27,20 +27,24 @@ with open(path_pair, 'rb') as f:
 with open(path_flag, 'rb') as f:
     flags = pk.load(f)
 
-paths = {'dnn': 'model/dnn.h5',
-         'cnn': 'model/cnn.h5',
-         'rnn': 'model/rnn.h5'}
+paths = {'dnn': 'model/dnn.pkl',
+         'cnn': 'model/cnn.pkl',
+         'rnn': 'model/rnn.pkl'}
 
-models = {'dnn': load_model(map_item('dnn', paths)),
-          'cnn': load_model(map_item('cnn', paths)),
-          'rnn': load_model(map_item('rnn', paths))}
+models = {'dnn': torch.load(map_item('dnn', paths), map_location='cpu'),
+          'cnn': torch.load(map_item('cnn', paths), map_location='cpu'),
+          'rnn': torch.load(map_item('rnn', paths), map_location='cpu')}
 
 
 def test_pair(name, pairs, flags, thre):
     model = map_item(name, models)
     sent1s, sent2s = pairs
-    probs = model.predict([sent1s, sent2s])
-    probs = np.reshape(probs, (1, -1))[0]
+    sent1s, sent2s = torch.LongTensor(sent1s), torch.LongTensor(sent2s)
+    with torch.no_grad():
+        model.eval()
+        probs = torch.sigmoid(model(sent1s, sent2s))
+    probs = probs.numpy()
+    probs = np.squeeze(probs, axis=-1)
     preds = probs > thre
     print('\n%s %s %.2f\n' % (name, 'acc:', accuracy_score(flags, preds)))
     for flag, prob, text1, text2, pred in zip(flags, probs, text1s, text2s, preds):
