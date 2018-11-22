@@ -62,11 +62,11 @@ def get_loader(pairs, flags):
     return DataLoader(triples, batch_size=batch_size, shuffle=True)
 
 
-def get_metric(model, loss_func, pairs, flags):
+def get_metric(model, loss_func, pairs, flags, thre):
     sent1s, sent2s = pairs
     probs = model(sent1s, sent2s)
     probs = torch.squeeze(probs, dim=-1)
-    preds = probs > 0.5
+    preds = probs > thre
     loss = loss_func(probs, flags.float())
     acc = (preds == flags.byte()).sum().item() / len(preds)
     return loss, acc
@@ -100,7 +100,7 @@ def fit(name, max_epoch, embed_mat, path_feats, detail):
         optimizer = Adam(model.parameters(), lr=learn_rate)
         start = time.time()
         for step, (sent1s, sent2s, flags) in enumerate(train_loader):
-            batch_loss, batch_acc = get_metric(model, loss_func, [sent1s, sent2s], flags)
+            batch_loss, batch_acc = get_metric(model, loss_func, [sent1s, sent2s], flags, thre=0)
             optimizer.zero_grad()
             batch_loss.backward()
             optimizer.step()
@@ -109,8 +109,8 @@ def fit(name, max_epoch, embed_mat, path_feats, detail):
         delta = time.time() - start
         with torch.no_grad():
             model.eval()
-            train_loss, train_acc = get_metric(model, loss_func, train_pairs, train_flags)
-            dev_loss, dev_acc = get_metric(model, loss_func, dev_pairs, dev_flags)
+            train_loss, train_acc = get_metric(model, loss_func, train_pairs, train_flags, thre=0)
+            dev_loss, dev_acc = get_metric(model, loss_func, dev_pairs, dev_flags, thre=0)
         extra = ''
         if dev_loss < min_dev_loss:
             extra = ', val_loss reduce by {:.3f}'.format(min_dev_loss - dev_loss)
