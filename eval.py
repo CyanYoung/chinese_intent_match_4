@@ -37,9 +37,9 @@ models = {'dnn': torch.load(map_item('dnn', paths), map_location='cpu'),
 
 
 def test_pair(name, pairs, flags, thre):
-    model = map_item(name, models)
     sent1s, sent2s = pairs
     sent1s, sent2s = torch.LongTensor(sent1s), torch.LongTensor(sent2s)
+    model = map_item(name, models)
     with torch.no_grad():
         model.eval()
         probs = torch.sigmoid(model(sent1s, sent2s))
