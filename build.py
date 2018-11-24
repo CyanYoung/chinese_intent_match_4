@@ -19,13 +19,8 @@ detail = False if torch.cuda.is_available() else True
 batch_size = 128
 
 path_embed = 'feat/embed.pkl'
-path_label_ind = 'feat/label_ind.pkl'
 with open(path_embed, 'rb') as f:
     embed_mat = pk.load(f)
-with open(path_label_ind, 'rb') as f:
-    label_inds = pk.load(f)
-
-class_num = len(label_inds)
 
 archs = {'dnn': Dnn,
          'cnn': Cnn,
