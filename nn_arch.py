@@ -75,7 +75,7 @@ class Cnn(nn.Module):
 
     def forward(self, x, y):
         x = self.embed(x)
-        x = x.view(x.size(0), self.embed_len, -1)
+        x = x.permute(0, 2, 1)
         x1 = self.cap1(x)
         x2 = self.cap2(x)
         x3 = self.cap3(x)
@@ -83,7 +83,7 @@ class Cnn(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.encode(x)
         y = self.embed(y)
-        y = y.view(y.size(0), self.embed_len, -1)
+        y = y.permute(0, 2, 1)
         y1 = self.cap1(y)
         y2 = self.cap2(y)
         y3 = self.cap3(y)
@@ -117,7 +117,7 @@ class CnnEncode(nn.Module):
 
     def forward(self, x):
         x = self.embed(x)
-        x = x.view(x.size(0), self.embed_len, -1)
+        x = x.permute(0, 2, 1)
         x1 = self.cap1(x)
         x2 = self.cap2(x)
         x3 = self.cap3(x)
