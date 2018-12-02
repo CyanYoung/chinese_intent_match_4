@@ -15,7 +15,6 @@ seq_len = 30
 path_word_vec = 'feat/word_vec.pkl'
 path_word_ind = 'feat/word_ind.pkl'
 path_embed = 'feat/embed.pkl'
-path_label_ind = 'feat/label_ind.pkl'
 
 
 def embed(sent_words, path_word_ind, path_word_vec, path_embed):
