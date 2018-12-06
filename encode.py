@@ -50,9 +50,7 @@ models = {'dnn': load_encode('dnn', embed_mat, seq_len),
 def split(sents, labels, path_label):
     label_set = sorted(list(set(labels)))
     labels = np.array(labels)
-    sent_mat = list()
-    core_labels = list()
-    core_nums = list()
+    sent_mat, core_labels, core_nums = list(), list(), list()
     for match_label in label_set:
         match_inds = np.where(labels == match_label)
         match_sents = sents[match_inds]
