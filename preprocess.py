@@ -84,8 +84,7 @@ def save(path, texts, labels):
 
 
 def gather(path_univ_dir, path_train, path_test):
-    texts = list()
-    labels = list()
+    texts, labels = list(), list()
     files = os.listdir(path_univ_dir)
     for file in files:
         label = os.path.splitext(file)[0]
