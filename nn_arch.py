@@ -140,11 +140,13 @@ class Rnn(nn.Module):
 
     def forward(self, x, y):
         x = self.embed(x)
-        x, h_n = self.encode(x)
-        x = x[:, -1, :]
+        h1, (h1_n, c1_n) = self.encode(x)
+        del h1
+        x = h1_n[0]
         y = self.embed(y)
-        y, h_n = self.encode(y)
-        y = y[:, -1, :]
+        h2, (h2_n, c2_n) = self.encode(y)
+        del h2
+        y = h2_n[0]
         diff = torch.abs(x - y)
         prod = x * y
         z = torch.cat([x, y, diff, prod], dim=1)
@@ -162,8 +164,9 @@ class RnnEncode(nn.Module):
 
     def forward(self, x):
         x = self.embed(x)
-        x, h_n = self.encode(x)
-        return x[:, -1, :]
+        h, (h_n, c_n) = self.encode(x)
+        del h
+        return h_n[0]
 
 
 class Match(nn.Module):
