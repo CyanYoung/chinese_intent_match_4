@@ -18,7 +18,7 @@ from util import load_word_re, load_type_re, load_pair, word_replace, map_item
 
 
 def load_match(name):
-    model = torch.load(map_item(name, paths), map_location='cpu')
+    model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
     match = Match()
     match_dict = match.state_dict()
@@ -33,6 +33,8 @@ def load_cache(path_cache):
         core_sents = pk.load(f)
     return core_sents
 
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 seq_len = 30
 encode_len = 200

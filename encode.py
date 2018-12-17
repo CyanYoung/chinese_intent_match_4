@@ -13,7 +13,7 @@ from util import flat_read, map_item
 
 def load_encode(name, embed_mat, seq_len):
     embed_mat = torch.Tensor(embed_mat)
-    model = torch.load(map_item(name, paths), map_location='cpu')
+    model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
     arch = map_item(name, archs)
     encode = arch(embed_mat, seq_len)
@@ -23,6 +23,8 @@ def load_encode(name, embed_mat, seq_len):
     encode.load_state_dict(encode_dict)
     return encode
 
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 seq_len = 30
 max_core = 5
