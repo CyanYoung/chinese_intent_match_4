@@ -12,7 +12,7 @@ from util import flat_read, map_item
 
 
 def load_encode(name, embed_mat, seq_len, device):
-    embed_mat = torch.Tensor(embed_mat).to(device)
+    embed_mat = torch.Tensor(embed_mat)
     model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
     arch = map_item(name, archs)
