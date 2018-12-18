@@ -6,6 +6,8 @@ import torch
 
 from sklearn.metrics import accuracy_score
 
+from build import tensorize
+
 from match import predict
 
 from util import flat_read, map_item
@@ -39,8 +41,7 @@ models = {'dnn': torch.load(map_item('dnn', paths), map_location=device),
 
 
 def test_pair(name, pairs, flags, thre):
-    sent1s, sent2s = pairs
-    sent1s, sent2s = torch.LongTensor(sent1s), torch.LongTensor(sent2s)
+    sent1s, sent2s = tensorize(pairs, device)
     model = map_item(name, models)
     with torch.no_grad():
         model.eval()
