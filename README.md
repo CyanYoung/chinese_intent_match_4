@@ -10,8 +10,6 @@ make_pair() 对每条数据取同类组合为正例，从异类数据中抽样 f
 
 组合为反例，汇总、打乱，保存为 (text1, text2, flag) 格式
 
-flag 代表 proximity，同类为 1、异类为 0，pred 只限于 [0, 1] 区间
-
 #### 2.explore
 
 统计词汇、长度、类别的频率，条形图可视化，计算 sent / word_per_sent 指标
