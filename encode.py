@@ -11,8 +11,8 @@ from nn_arch import DnnEncode, CnnEncode, RnnEncode
 from util import flat_read, map_item
 
 
-def load_encode(name, embed_mat, seq_len):
-    embed_mat = torch.Tensor(embed_mat)
+def load_encode(name, embed_mat, seq_len, device):
+    embed_mat = torch.Tensor(embed_mat).to(device)
     model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
     arch = map_item(name, archs)
@@ -44,9 +44,9 @@ paths = {'dnn': 'model/dnn.pkl',
          'cnn_cache': 'cache/cnn.pkl',
          'rnn_cache': 'cache/rnn.pkl'}
 
-models = {'dnn': load_encode('dnn', embed_mat, seq_len),
-          'cnn': load_encode('cnn', embed_mat, seq_len),
-          'rnn': load_encode('rnn', embed_mat, seq_len)}
+models = {'dnn': load_encode('dnn', embed_mat, seq_len, device),
+          'cnn': load_encode('cnn', embed_mat, seq_len, device),
+          'rnn': load_encode('rnn', embed_mat, seq_len, device)}
 
 
 def split(sents, labels, path_label):
@@ -84,7 +84,7 @@ def cache(path_sent, path_train, path_label):
             model.eval()
             encode_mat = list()
             for sents in sent_mat:
-                sents = torch.LongTensor(sents)
+                sents = torch.LongTensor(sents).to(device)
                 encode_mat.append(model(sents))
         core_sents = cluster(encode_mat, core_nums)
         path_cache = map_item(name + '_cache', paths)

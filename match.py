@@ -17,7 +17,7 @@ from encode import load_encode
 from util import load_word_re, load_type_re, load_pair, word_replace, map_item
 
 
-def load_match(name):
+def load_match(name, device):
     model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
     match = Match()
@@ -71,12 +71,12 @@ caches = {'dnn': load_cache(map_item('dnn_cache', paths)),
           'cnn': load_cache(map_item('cnn_cache', paths)),
           'rnn': load_cache(map_item('rnn_cache', paths))}
 
-models = {'dnn_encode': load_encode('dnn', embed_mat, seq_len),
-          'cnn_encode': load_encode('cnn', embed_mat, seq_len),
-          'rnn_encode': load_encode('rnn', embed_mat, seq_len),
-          'dnn_match': load_match('dnn'),
-          'cnn_match': load_match('cnn'),
-          'rnn_match': load_match('rnn')}
+models = {'dnn_encode': load_encode('dnn', embed_mat, seq_len, device),
+          'cnn_encode': load_encode('cnn', embed_mat, seq_len, device),
+          'rnn_encode': load_encode('rnn', embed_mat, seq_len, device),
+          'dnn_match': load_match('dnn', device),
+          'cnn_match': load_match('cnn', device),
+          'rnn_match': load_match('rnn', device)}
 
 
 def predict(text, name, vote):
@@ -86,9 +86,9 @@ def predict(text, name, vote):
     text = word_replace(text, homo_dict)
     text = word_replace(text, syno_dict)
     core_sents = map_item(name, caches)
-    core_sents = torch.Tensor(core_sents)
+    core_sents = torch.Tensor(core_sents).to(device)
     pad_seq = sent2ind(text, word_inds, seq_len, oov_ind, keep_oov=True)
-    sent = torch.LongTensor([pad_seq])
+    sent = torch.LongTensor([pad_seq]).to(device)
     encode = map_item(name + '_encode', models)
     with torch.no_grad():
         encode_seq = encode(sent)
