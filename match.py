@@ -34,7 +34,7 @@ def load_cache(path_cache):
     return core_sents
 
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 seq_len = 30
 encode_len = 200

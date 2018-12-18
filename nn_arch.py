@@ -2,11 +2,13 @@ import torch
 import torch.nn as nn
 
 
+seq_len = 30
+
+
 class Dnn(nn.Module):
-    def __init__(self, embed_mat, seq_len):
+    def __init__(self, embed_mat):
         super(Dnn, self).__init__()
         self.vocab_num, self.embed_len = embed_mat.size()
-        self.seq_len = seq_len
         self.embed = nn.Embedding(self.vocab_num, self.embed_len, _weight=embed_mat)
         self.encode1 = nn.Sequential(nn.Linear(self.embed_len, 200),
                                      nn.ReLU())
@@ -34,10 +36,9 @@ class Dnn(nn.Module):
 
 
 class DnnEncode(nn.Module):
-    def __init__(self, embed_mat, seq_len):
+    def __init__(self, embed_mat):
         super(DnnEncode, self).__init__()
         self.vocab_num, self.embed_len = embed_mat.size()
-        self.seq_len = seq_len
         self.embed = nn.Embedding(self.vocab_num, self.embed_len, _weight=embed_mat)
         self.encode1 = nn.Sequential(nn.Linear(self.embed_len, 200),
                                      nn.ReLU())
@@ -52,10 +53,9 @@ class DnnEncode(nn.Module):
 
 
 class Cnn(nn.Module):
-    def __init__(self, embed_mat, seq_len):
+    def __init__(self, embed_mat):
         super(Cnn, self).__init__()
         self.vocab_num, self.embed_len = embed_mat.size()
-        self.seq_len = seq_len
         self.embed = nn.Embedding(self.vocab_num, self.embed_len, _weight=embed_mat)
         self.cap1 = nn.Sequential(nn.Conv1d(self.embed_len, 64, kernel_size=1, padding=0),
                                   nn.ReLU(),
@@ -98,10 +98,9 @@ class Cnn(nn.Module):
 
 
 class CnnEncode(nn.Module):
-    def __init__(self, embed_mat, seq_len):
+    def __init__(self, embed_mat):
         super(CnnEncode, self).__init__()
         self.vocab_num, self.embed_len = embed_mat.size()
-        self.seq_len = seq_len
         self.embed = nn.Embedding(self.vocab_num, self.embed_len, _weight=embed_mat)
         self.cap1 = nn.Sequential(nn.Conv1d(self.embed_len, 64, kernel_size=1, padding=0),
                                   nn.ReLU(),
@@ -127,10 +126,9 @@ class CnnEncode(nn.Module):
 
 
 class Rnn(nn.Module):
-    def __init__(self, embed_mat, seq_len):
+    def __init__(self, embed_mat):
         super(Rnn, self).__init__()
         self.vocab_num, self.embed_len = embed_mat.size()
-        self.seq_len = seq_len
         self.embed = nn.Embedding(self.vocab_num, self.embed_len, _weight=embed_mat)
         self.encode = nn.LSTM(self.embed_len, 200, batch_first=True)
         self.match1 = nn.Sequential(nn.Linear(800, 200),
@@ -155,10 +153,9 @@ class Rnn(nn.Module):
 
 
 class RnnEncode(nn.Module):
-    def __init__(self, embed_mat, seq_len):
+    def __init__(self, embed_mat):
         super(RnnEncode, self).__init__()
         self.vocab_num, self.embed_len = embed_mat.size()
-        self.seq_len = seq_len
         self.embed = nn.Embedding(self.vocab_num, self.embed_len, _weight=embed_mat)
         self.encode = nn.LSTM(self.embed_len, 200, batch_first=True)
 

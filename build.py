@@ -33,37 +33,14 @@ paths = {'dnn': 'model/dnn.pkl',
 
 def load_feat(path_feats):
     with open(path_feats['pair_train'], 'rb') as f:
-        train_pairs = pk.load(f)
+        train_sent1s, train_sent2s = pk.load(f)
     with open(path_feats['flag_train'], 'rb') as f:
         train_flags = pk.load(f)
     with open(path_feats['pair_dev'], 'rb') as f:
-        dev_pairs = pk.load(f)
+        dev_sent1s, dev_sent2s = pk.load(f)
     with open(path_feats['flag_dev'], 'rb') as f:
         dev_flags = pk.load(f)
-    return train_pairs, train_flags, dev_pairs, dev_flags
-
-
-def tensorize(feats, device):
-    tensors = list()
-    for feat in feats:
-        tensors.append(torch.LongTensor(feat).to(device))
-    return tensors
-
-
-def get_loader(pairs, flags):
-    sent1s, sent2s = pairs
-    triples = TensorDataset(sent1s, sent2s, flags)
-    return DataLoader(triples, batch_size=batch_size, shuffle=True)
-
-
-def get_metric(model, loss_func, pairs, flags, thre):
-    sent1s, sent2s = pairs
-    probs = model(sent1s, sent2s)
-    probs = torch.squeeze(probs, dim=-1)
-    preds = probs > thre
-    loss = loss_func(probs, flags.float())
-    acc = (preds == flags.byte()).sum().item() / len(preds)
-    return loss, acc
+    return train_sent1s, train_sent2s, train_flags, dev_sent1s, dev_sent2s, dev_flags
 
 
 def step_print(step, batch_loss, batch_acc):
@@ -75,15 +52,60 @@ def epoch_print(epoch, delta, train_loss, train_acc, dev_loss, dev_acc, extra):
           'epoch', epoch, delta, train_loss, train_acc, dev_loss, dev_acc) + extra)
 
 
+def tensorize(feats, device):
+    tensors = list()
+    for feat in feats:
+        tensors.append(torch.LongTensor(feat).to(device))
+    return tensors
+
+
+def get_loader(triples):
+    sent1s, sent2s, flags = triples
+    triples = TensorDataset(sent1s, sent2s, flags)
+    return DataLoader(triples, batch_size, shuffle=True)
+
+
+def get_metric(model, loss_func, triples, thre):
+    sent1s, sent2s, flags = triples
+    probs = model(sent1s, sent2s)
+    probs = torch.squeeze(probs, dim=-1)
+    preds = probs > thre
+    loss = loss_func(probs, flags.float())
+    acc = (preds == flags.byte()).sum().item()
+    return loss, acc, len(preds)
+
+
+def batch_train(model, loss_func, optimizer, loader, detail):
+    total_loss, total_acc, total_num = [0] * 3
+    for step, triples in enumerate(loader):
+        batch_loss, batch_acc, batch_num = get_metric(model, loss_func, triples, thre=0.5)
+        optimizer.zero_grad()
+        batch_loss.backward()
+        optimizer.step()
+        total_loss = total_loss + batch_loss.item()
+        total_acc, total_num = total_acc + batch_acc, total_num + batch_num
+        if detail:
+            step_print(step + 1, batch_loss / batch_num, batch_acc / batch_num)
+    return total_loss / total_num, total_acc / total_num
+
+
+def batch_dev(model, loss_func, loader):
+    total_loss, total_acc, total_num = [0] * 3
+    for step, triples in enumerate(loader):
+        batch_loss, batch_acc, batch_num = get_metric(model, loss_func, triples, thre=0.5)
+        total_loss = total_loss + batch_loss.item()
+        total_acc, total_num = total_acc + batch_acc, total_num + batch_num
+    return total_loss / total_num, total_acc / total_num
+
+
 def fit(name, max_epoch, embed_mat, path_feats, detail):
-    feats = load_feat(path_feats)
-    train_pairs, train_flags, dev_pairs, dev_flags = tensorize(feats, device)
-    train_loader = get_loader(train_pairs, train_flags)
+    tensors = tensorize(load_feat(path_feats), device)
+    bound = int(len(tensors) / 2)
+    train_loader, dev_loader = get_loader(tensors[:bound]), get_loader(tensors[bound:])
     embed_mat = torch.Tensor(embed_mat)
-    seq_len = len(train_pairs[0][0])
     arch = map_item(name, archs)
-    model = arch(embed_mat, seq_len).to(device)
-    loss_func = BCEWithLogitsLoss()
+    model = arch(embed_mat).to(device)
+    loss_func = BCEWithLogitsLoss(reduction='sum')
     learn_rate, min_rate = 1e-3, 1e-5
     min_dev_loss = float('inf')
     trap_count, max_count = 0, 5
@@ -94,18 +116,11 @@ def fit(name, max_epoch, embed_mat, path_feats, detail):
         model.train()
         optimizer = Adam(model.parameters(), lr=learn_rate)
         start = time.time()
-        for step, (sent1s, sent2s, flags) in enumerate(train_loader):
-            batch_loss, batch_acc = get_metric(model, loss_func, [sent1s, sent2s], flags, thre=0)
-            optimizer.zero_grad()
-            batch_loss.backward()
-            optimizer.step()
-            if detail:
-                step_print(step + 1, batch_loss, batch_acc)
+        train_loss, train_acc = batch_train(model, loss_func, optimizer, train_loader, detail)
         delta = time.time() - start
         with torch.no_grad():
             model.eval()
-            train_loss, train_acc = get_metric(model, loss_func, train_pairs, train_flags, thre=0)
-            dev_loss, dev_acc = get_metric(model, loss_func, dev_pairs, dev_flags, thre=0)
+            dev_loss, dev_acc = batch_dev(model, loss_func, dev_loader)
         extra = ''
         if dev_loss < min_dev_loss:
             extra = ', val_loss reduce by {:.3f}'.format(min_dev_loss - dev_loss)

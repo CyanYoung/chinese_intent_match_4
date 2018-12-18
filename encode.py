@@ -24,7 +24,7 @@ def load_encode(name, embed_mat, seq_len, device):
     return encode
 
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 seq_len = 30
 max_core = 5
