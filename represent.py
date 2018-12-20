@@ -12,15 +12,25 @@ min_freq = 1
 max_vocab = 5000
 seq_len = 30
 
+pad_ind, oov_ind = 0, 1
+
 path_word_vec = 'feat/word_vec.pkl'
 path_word_ind = 'feat/word_ind.pkl'
 path_embed = 'feat/embed.pkl'
 
 
+def tran_dict(word_inds, off):
+    off_word_inds = dict()
+    for word, ind in word_inds.items():
+        off_word_inds[word] = ind + off
+    return off_word_inds
+
+
 def embed(sent_words, path_word_ind, path_word_vec, path_embed):
     model = Dictionary(sent_words)
-    model.filter_extremes(no_below=min_freq, keep_n=max_vocab)
+    model.filter_extremes(no_below=min_freq, no_above=0.5, keep_n=max_vocab)
     word_inds = model.token2id
+    word_inds = tran_dict(word_inds, off=2)
     with open(path_word_ind, 'wb') as f:
         pk.dump(word_inds, f)
     with open(path_word_vec, 'rb') as f:
@@ -31,20 +41,20 @@ def embed(sent_words, path_word_ind, path_word_vec, path_embed):
     for word, ind in word_inds.items():
         if word in vocab:
             if ind < max_vocab:
-                embed_mat[ind + 1] = word_vecs[word]
+                embed_mat[ind] = word_vecs[word]
     with open(path_embed, 'wb') as f:
         pk.dump(embed_mat, f)
 
 
-def sent2ind(words, word_inds, seq_len, oov_ind, keep_oov):
+def sent2ind(words, word_inds, seq_len, keep_oov):
     seq = list()
     for word in words:
         if word in word_inds:
-            seq.append(word_inds[word] + 1)
+            seq.append(word_inds[word])
         elif keep_oov:
             seq.append(oov_ind)
     if len(seq) < seq_len:
-        return [0] * (seq_len - len(seq)) + seq
+        return [pad_ind] * (seq_len - len(seq)) + seq
     else:
         return seq[-seq_len:]
 
@@ -52,12 +62,9 @@ def sent2ind(words, word_inds, seq_len, oov_ind, keep_oov):
 def align(sent_words):
     with open(path_word_ind, 'rb') as f:
         word_inds = pk.load(f)
-    with open(path_embed, 'rb') as f:
-        embed_mat = pk.load(f)
-    oov_ind = len(embed_mat) - 1
     pad_seqs = list()
     for words in sent_words:
-        pad_seq = sent2ind(words, word_inds, seq_len, oov_ind, keep_oov=True)
+        pad_seq = sent2ind(words, word_inds, seq_len, keep_oov=True)
         pad_seqs.append(pad_seq)
     return np.array(pad_seqs)
 

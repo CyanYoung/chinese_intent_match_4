@@ -58,8 +58,6 @@ with open(path_embed, 'rb') as f:
 with open(path_label, 'rb') as f:
     core_labels = pk.load(f)
 
-oov_ind = len(embed_mat) - 1
-
 paths = {'dnn': 'model/dnn.pkl',
          'cnn': 'model/cnn.pkl',
          'rnn': 'model/rnn.pkl',
@@ -87,7 +85,7 @@ def predict(text, name, vote):
     text = word_replace(text, syno_dict)
     core_sents = map_item(name, caches)
     core_sents = torch.Tensor(core_sents).to(device)
-    pad_seq = sent2ind(text, word_inds, seq_len, oov_ind, keep_oov=True)
+    pad_seq = sent2ind(text, word_inds, seq_len, keep_oov=True)
     sent = torch.LongTensor([pad_seq]).to(device)
     encode = map_item(name + '_encode', models)
     with torch.no_grad():
