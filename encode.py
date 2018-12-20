@@ -11,12 +11,12 @@ from nn_arch import DnnEncode, CnnEncode, RnnEncode
 from util import flat_read, map_item
 
 
-def load_encode(name, embed_mat, seq_len, device):
+def load_encode(name, embed_mat, device):
     embed_mat = torch.Tensor(embed_mat)
     model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
     arch = map_item(name, archs)
-    encode = arch(embed_mat, seq_len)
+    encode = arch(embed_mat)
     encode_dict = encode.state_dict()
     part_dict = {key: val for key, val in full_dict.items() if key in encode_dict}
     encode_dict.update(part_dict)
@@ -26,7 +26,6 @@ def load_encode(name, embed_mat, seq_len, device):
 
 device = torch.device('cpu')
 
-seq_len = 30
 max_core = 5
 
 path_embed = 'feat/embed.pkl'
@@ -44,9 +43,9 @@ paths = {'dnn': 'model/dnn.pkl',
          'cnn_cache': 'cache/cnn.pkl',
          'rnn_cache': 'cache/rnn.pkl'}
 
-models = {'dnn': load_encode('dnn', embed_mat, seq_len, device),
-          'cnn': load_encode('cnn', embed_mat, seq_len, device),
-          'rnn': load_encode('rnn', embed_mat, seq_len, device)}
+models = {'dnn': load_encode('dnn', embed_mat, device),
+          'cnn': load_encode('cnn', embed_mat, device),
+          'rnn': load_encode('rnn', embed_mat, device)}
 
 
 def split(sents, labels, path_label):

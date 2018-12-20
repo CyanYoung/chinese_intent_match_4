@@ -71,9 +71,9 @@ caches = {'dnn': load_cache(map_item('dnn_cache', paths)),
           'cnn': load_cache(map_item('cnn_cache', paths)),
           'rnn': load_cache(map_item('rnn_cache', paths))}
 
-models = {'dnn_encode': load_encode('dnn', embed_mat, seq_len, device),
-          'cnn_encode': load_encode('cnn', embed_mat, seq_len, device),
-          'rnn_encode': load_encode('rnn', embed_mat, seq_len, device),
+models = {'dnn_encode': load_encode('dnn', embed_mat, device),
+          'cnn_encode': load_encode('cnn', embed_mat, device),
+          'rnn_encode': load_encode('rnn', embed_mat, device),
           'dnn_match': load_match('dnn', device),
           'cnn_match': load_match('cnn', device),
           'rnn_match': load_match('rnn', device)}
