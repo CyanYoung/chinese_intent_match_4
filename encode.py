@@ -16,7 +16,7 @@ def load_encode(name, embed_mat, device):
     model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
     arch = map_item(name, archs)
-    encode = arch(embed_mat)
+    encode = arch(embed_mat).to(device)
     encode_dict = encode.state_dict()
     part_dict = {key: val for key, val in full_dict.items() if key in encode_dict}
     encode_dict.update(part_dict)

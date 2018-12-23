@@ -20,7 +20,7 @@ from util import load_word_re, load_type_re, load_pair, word_replace, map_item
 def load_match(name, device):
     model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
-    match = Match()
+    match = Match().to(device)
     match_dict = match.state_dict()
     part_dict = {key: val for key, val in full_dict.items() if key in match_dict}
     match_dict.update(part_dict)
