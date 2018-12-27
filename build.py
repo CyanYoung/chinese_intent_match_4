@@ -67,10 +67,10 @@ def get_loader(triples):
 
 def get_metric(model, loss_func, triples, thre):
     sent1s, sent2s, flags = triples
-    probs = model(sent1s, sent2s)
-    probs = torch.squeeze(probs, dim=-1)
-    preds = probs > thre
-    loss = loss_func(probs, flags.float())
+    prods = model(sent1s, sent2s)
+    prods = torch.squeeze(prods, dim=-1)
+    preds = prods > thre
+    loss = loss_func(prods, flags.float())
     acc = (preds == flags.byte()).sum().item()
     return loss, acc, len(preds)
 
