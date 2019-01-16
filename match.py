@@ -22,7 +22,8 @@ def load_match(name, device):
     full_dict = model.state_dict()
     match = Match().to(device)
     match_dict = match.state_dict()
-    part_dict = {key: val for key, val in full_dict.items() if key in match_dict}
+    pre = len('match.')
+    part_dict = {key[pre:]: val for key, val in full_dict.items() if key[pre:] in match_dict}
     match_dict.update(part_dict)
     match.load_state_dict(match_dict)
     return match

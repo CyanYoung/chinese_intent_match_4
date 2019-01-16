@@ -18,7 +18,8 @@ def load_encode(name, embed_mat, device):
     arch = map_item(name, archs)
     encode = arch(embed_mat).to(device)
     encode_dict = encode.state_dict()
-    part_dict = {key: val for key, val in full_dict.items() if key in encode_dict}
+    pre = len('encode.')
+    part_dict = {key[pre:]: val for key, val in full_dict.items() if key[pre:] in encode_dict}
     encode_dict.update(part_dict)
     encode.load_state_dict(encode_dict)
     return encode
