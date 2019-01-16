@@ -20,7 +20,7 @@ syno_dict = load_pair(path_syno)
 
 
 def save_pair(path, pairs):
-    head = 'text1,text2,flag'  # prox
+    head = 'text1,text2,flag'
     with open(path, 'w') as f:
         f.write(head + '\n')
         for text1, text2, flag in pairs:
