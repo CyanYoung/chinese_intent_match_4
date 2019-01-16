@@ -49,6 +49,11 @@ def flat_read(path, field):
     return items
 
 
+def trunc(key, num):
+    fields = key.split('.')
+    return '.'.join(fields[num:])
+
+
 def map_item(name, items):
     if name in items:
         return items[name]

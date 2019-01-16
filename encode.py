@@ -8,7 +8,7 @@ from sklearn.cluster import KMeans
 
 from nn_arch import DnnEncode, CnnEncode, RnnEncode
 
-from util import flat_read, map_item
+from util import flat_read, trunc, map_item
 
 
 def load_encode(name, embed_mat, device):
@@ -18,8 +18,10 @@ def load_encode(name, embed_mat, device):
     arch = map_item(name, archs)
     part = arch(embed_mat).to(device)
     part_dict = part.state_dict()
-    pre = len('encode.')
-    part_dict = {key[pre:]: val for key, val in full_dict.items() if key[pre:] in part_dict}
+    for key, val in full_dict.items():
+        key = trunc(key, num=1)
+        if key in part_dict:
+            part_dict[key] = val
     part.load_state_dict(part_dict)
     return part
 

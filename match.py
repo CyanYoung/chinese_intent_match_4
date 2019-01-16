@@ -14,7 +14,7 @@ from nn_arch import Match
 
 from encode import load_encode
 
-from util import load_word_re, load_type_re, load_pair, word_replace, map_item
+from util import load_word_re, load_type_re, load_pair, word_replace, trunc, map_item
 
 
 def load_match(name, device):
@@ -22,8 +22,10 @@ def load_match(name, device):
     full_dict = model.state_dict()
     part = Match().to(device)
     part_dict = part.state_dict()
-    pre = len('match.')
-    part_dict = {key[pre:]: val for key, val in full_dict.items() if key[pre:] in part_dict}
+    for key, val in full_dict.items():
+        key = trunc(key, num=1)
+        if key in part_dict:
+            part_dict[key] = val
     part.load_state_dict(part_dict)
     return part
 
