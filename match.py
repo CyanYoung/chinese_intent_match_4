@@ -20,13 +20,12 @@ from util import load_word_re, load_type_re, load_pair, word_replace, map_item
 def load_match(name, device):
     model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
-    match = Match().to(device)
-    match_dict = match.state_dict()
+    part = Match().to(device)
+    part_dict = part.state_dict()
     pre = len('match.')
-    part_dict = {key[pre:]: val for key, val in full_dict.items() if key[pre:] in match_dict}
-    match_dict.update(part_dict)
-    match.load_state_dict(match_dict)
-    return match
+    part_dict = {key[pre:]: val for key, val in full_dict.items() if key[pre:] in part_dict}
+    part.load_state_dict(part_dict)
+    return part
 
 
 def load_cache(path_cache):
