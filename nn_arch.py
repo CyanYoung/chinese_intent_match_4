@@ -102,14 +102,14 @@ class RnnEncode(nn.Module):
 class Match(nn.Module):
     def __init__(self):
         super(Match, self).__init__()
-        self.match1 = nn.Sequential(nn.Linear(800, 200),
+        self.la = nn.Sequential(nn.Linear(800, 200),
                                     nn.ReLU())
-        self.match2 = nn.Sequential(nn.Dropout(0.2),
+        self.dl = nn.Sequential(nn.Dropout(0.2),
                                     nn.Linear(200, 1))
 
     def forward(self, x, y):
         diff = torch.abs(x - y)
         prod = x * y
         z = torch.cat([x, y, diff, prod], dim=1)
-        z = self.match1(z)
-        return self.match2(z)
+        z = self.la(z)
+        return self.dl(z)
