@@ -103,9 +103,9 @@ class Match(nn.Module):
     def __init__(self):
         super(Match, self).__init__()
         self.la = nn.Sequential(nn.Linear(800, 200),
-                                    nn.ReLU())
+                                nn.ReLU())
         self.dl = nn.Sequential(nn.Dropout(0.2),
-                                    nn.Linear(200, 1))
+                                nn.Linear(200, 1))
 
     def forward(self, x, y):
         diff = torch.abs(x - y)
