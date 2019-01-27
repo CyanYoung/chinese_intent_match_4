@@ -28,7 +28,7 @@ def tran_dict(word_inds, off):
 
 def embed(sent_words, path_word_ind, path_word_vec, path_embed):
     model = Dictionary(sent_words)
-    model.filter_extremes(no_below=min_freq, no_above=0.5, keep_n=max_vocab)
+    model.filter_extremes(no_below=min_freq, no_above=1.0, keep_n=max_vocab)
     word_inds = model.token2id
     word_inds = tran_dict(word_inds, off=2)
     with open(path_word_ind, 'wb') as f:
