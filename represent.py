@@ -86,8 +86,7 @@ def vectorize_pair(path_data, path_pair, path_flag):
     sent1s = flat_read(path_data, 'text1')
     sent2s = flat_read(path_data, 'text2')
     flags = flat_read(path_data, 'flag')
-    pad_seq1s = align(sent1s)
-    pad_seq2s = align(sent2s)
+    pad_seq1s, pad_seq2s = align(sent1s), align(sent2s)
     pairs = (pad_seq1s, pad_seq2s)
     flags = np.array(flags)
     with open(path_pair, 'wb') as f:
