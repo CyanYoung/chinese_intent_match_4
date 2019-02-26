@@ -22,16 +22,16 @@ class DnnEncode(nn.Module):
         super(DnnEncode, self).__init__()
         vocab_num, embed_len = embed_mat.size()
         self.embed = nn.Embedding(vocab_num, embed_len, _weight=embed_mat)
-        self.da1 = nn.Sequential(nn.Linear(embed_len, 200),
+        self.la1 = nn.Sequential(nn.Linear(embed_len, 200),
                                  nn.ReLU())
-        self.da2 = nn.Sequential(nn.Linear(200, 200),
+        self.la2 = nn.Sequential(nn.Linear(200, 200),
                                  nn.ReLU())
 
     def forward(self, x):
         x = self.embed(x)
         x = torch.mean(x, dim=1)
-        x = self.da1(x)
-        return self.da2(x)
+        x = self.la1(x)
+        return self.la2(x)
 
 
 class Cnn(nn.Module):
@@ -60,7 +60,7 @@ class CnnEncode(nn.Module):
         self.cap3 = nn.Sequential(nn.Conv1d(embed_len, 64, kernel_size=3, padding=1),
                                   nn.ReLU(),
                                   nn.MaxPool1d(seq_len))
-        self.da = nn.Sequential(nn.Linear(192, 200),
+        self.la = nn.Sequential(nn.Linear(192, 200),
                                 nn.ReLU())
 
     def forward(self, x):
@@ -71,7 +71,7 @@ class CnnEncode(nn.Module):
         x3 = self.cap3(x)
         x = torch.cat((x1, x2, x3), dim=1)
         x = x.view(x.size(0), -1)
-        return self.da(x)
+        return self.la(x)
 
 
 class Rnn(nn.Module):
