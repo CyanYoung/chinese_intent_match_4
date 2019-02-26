@@ -21,7 +21,7 @@ class DnnEncode(nn.Module):
     def __init__(self, embed_mat):
         super(DnnEncode, self).__init__()
         vocab_num, embed_len = embed_mat.size()
-        self.embed = nn.Embedding(vocab_num, embed_len)
+        self.embed = nn.Embedding(vocab_num, embed_len, _weight=embed_mat)
         self.da1 = nn.Sequential(nn.Linear(embed_len, 200),
                                  nn.ReLU())
         self.da2 = nn.Sequential(nn.Linear(200, 200),
@@ -50,7 +50,7 @@ class CnnEncode(nn.Module):
     def __init__(self, embed_mat):
         super(CnnEncode, self).__init__()
         vocab_num, embed_len = embed_mat.size()
-        self.embed = nn.Embedding(vocab_num, embed_len)
+        self.embed = nn.Embedding(vocab_num, embed_len, _weight=embed_mat)
         self.cap1 = nn.Sequential(nn.Conv1d(embed_len, 64, kernel_size=1, padding=0),
                                   nn.ReLU(),
                                   nn.MaxPool1d(seq_len))
@@ -90,7 +90,7 @@ class RnnEncode(nn.Module):
     def __init__(self, embed_mat):
         super(RnnEncode, self).__init__()
         vocab_num, embed_len = embed_mat.size()
-        self.embed = nn.Embedding(vocab_num, embed_len)
+        self.embed = nn.Embedding(vocab_num, embed_len, _weight=embed_mat)
         self.ra = nn.LSTM(embed_len, 200, batch_first=True)
 
     def forward(self, x):
