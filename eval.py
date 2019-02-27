@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score
 
 from build import tensorize
 
-from match import models, predict
+from match import predict
 
 from util import flat_read, map_item
 
@@ -30,6 +30,14 @@ with open(path_pair, 'rb') as f:
     pairs = pk.load(f)
 with open(path_flag, 'rb') as f:
     flags = pk.load(f)
+
+paths = {'dnn': 'model/dnn.pkl',
+         'cnn': 'model/cnn.pkl',
+         'rnn': 'model/rnn.pkl'}
+
+models = {'dnn': torch.load(map_item('dnn', paths), map_location=device),
+          'cnn': torch.load(map_item('cnn', paths), map_location=device),
+          'rnn': torch.load(map_item('rnn', paths), map_location=device)}
 
 
 def test_pair(name, pairs, flags, thre):
