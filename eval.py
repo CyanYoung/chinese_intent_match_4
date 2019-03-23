@@ -4,7 +4,7 @@ import numpy as np
 
 import torch
 
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score
 
 from build import tensorize
 
@@ -49,7 +49,8 @@ def test_pair(name, pairs, flags, thre):
     probs = probs.numpy()
     probs = np.squeeze(probs, axis=-1)
     preds = probs > thre
-    print('\n%s %s %.2f\n' % (name, 'acc:', accuracy_score(flags, preds)))
+    f1 = f1_score(flags, preds)
+    print('\n%s f1: %.2f - acc: %.2f\n' % (name, f1, accuracy_score(flags, preds)))
     for flag, prob, text1, text2, pred in zip(flags, probs, text1s, text2s, preds):
         if flag != pred:
             print('{} {:.3f} {} | {}'.format(flag, prob, text1, text2))
@@ -59,7 +60,8 @@ def test(name, texts, labels, vote):
     preds = list()
     for text in texts:
         preds.append(predict(text, name, vote))
-    print('\n%s %s %.2f\n' % (name, 'acc:', accuracy_score(labels, preds)))
+    f1 = f1_score(labels, preds, average='weighted')
+    print('\n%s f1: %.2f - acc: %.2f\n' % (name, f1, accuracy_score(labels, preds)))
     for text, label, pred in zip(texts, labels, preds):
         if label != pred:
             print('{}: {} -> {}'.format(text, label, pred))
