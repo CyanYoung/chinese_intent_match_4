@@ -52,13 +52,10 @@ syno_dict = load_pair(path_syno)
 
 path_word_ind = 'feat/word_ind.pkl'
 path_embed = 'feat/embed.pkl'
-path_label = 'cache/label.pkl'
 with open(path_word_ind, 'rb') as f:
     word_inds = pk.load(f)
 with open(path_embed, 'rb') as f:
     embed_mat = pk.load(f)
-with open(path_label, 'rb') as f:
-    core_labels = pk.load(f)
 
 paths = {'dnn': 'model/dnn.pkl',
          'cnn': 'model/cnn.pkl',
@@ -85,7 +82,7 @@ def predict(text, name, vote):
         text = re.sub(word_re, word_type, text)
     text = word_replace(text, homo_dict)
     text = word_replace(text, syno_dict)
-    core_sents = map_item(name, caches)
+    core_sents, core_labels = map_item(name, caches)
     core_sents = torch.Tensor(core_sents).to(device)
     pad_seq = sent2ind(text, word_inds, seq_len, keep_oov=True)
     sent = torch.LongTensor([pad_seq]).to(device)
