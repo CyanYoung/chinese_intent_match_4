@@ -100,6 +100,14 @@ def gather(path_univ_dir, path_train, path_test):
     save(path_test, texts[bound:], labels[bound:])
 
 
+def clean(text):
+    text = re.sub(stop_word_re, '', text)
+    for word_type, word_re in word_type_re.items():
+        text = re.sub(word_re, word_type, text)
+    text = word_replace(text, homo_dict)
+    return word_replace(text, syno_dict)
+
+
 def prepare(path_univ_dir):
     files = os.listdir(path_univ_dir)
     for file in files:
@@ -108,11 +116,7 @@ def prepare(path_univ_dir):
         with open(os.path.join(path_univ_dir, file), 'r') as f:
             for line in f:
                 text = line.strip().lower()
-                text = re.sub(stop_word_re, '', text)
-                for word_type, word_re in word_type_re.items():
-                    text = re.sub(word_re, word_type, text)
-                text = word_replace(text, homo_dict)
-                text = word_replace(text, syno_dict)
+                text = clean(text)
                 if text and text not in text_set:
                     text_set.add(text)
                     texts.append(text)

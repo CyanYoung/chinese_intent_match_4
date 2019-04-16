@@ -1,12 +1,12 @@
 import pickle as pk
 
-import re
-
 import numpy as np
 
 from collections import Counter
 
 import torch
+
+from preprocess import clean
 
 from represent import sent2ind
 
@@ -14,7 +14,7 @@ from nn_arch import Match
 
 from encode import load_encode
 
-from util import load_word_re, load_type_re, load_pair, word_replace, map_item
+from util import map_item
 
 
 def load_match(name, device):
@@ -40,15 +40,6 @@ device = torch.device('cpu')
 
 seq_len = 30
 encode_len = 200
-
-path_stop_word = 'dict/stop_word.txt'
-path_type_dir = 'dict/word_type'
-path_homo = 'dict/homo.csv'
-path_syno = 'dict/syno.csv'
-stop_word_re = load_word_re(path_stop_word)
-word_type_re = load_type_re(path_type_dir)
-homo_dict = load_pair(path_homo)
-syno_dict = load_pair(path_syno)
 
 path_word_ind = 'feat/word_ind.pkl'
 path_embed = 'feat/embed.pkl'
@@ -77,11 +68,7 @@ models = {'dnn_encode': load_encode('dnn', embed_mat, device),
 
 
 def predict(text, name, vote):
-    text = re.sub(stop_word_re, '', text.strip())
-    for word_type, word_re in word_type_re.items():
-        text = re.sub(word_re, word_type, text)
-    text = word_replace(text, homo_dict)
-    text = word_replace(text, syno_dict)
+    text = clean(text)
     core_sents, core_labels = map_item(name, caches)
     core_sents = torch.Tensor(core_sents).to(device)
     pad_seq = sent2ind(text, word_inds, seq_len, keep_oov=True)
