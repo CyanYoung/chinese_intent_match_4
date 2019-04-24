@@ -9,7 +9,7 @@ class Dnn(nn.Module):
     def __init__(self, embed_mat):
         super(Dnn, self).__init__()
         self.encode = DnnEncode(embed_mat)
-        self.match = Match()
+        self.match = Match('dnn')
 
     def forward(self, x, y):
         x = self.encode(x)
@@ -38,7 +38,7 @@ class Cnn(nn.Module):
     def __init__(self, embed_mat):
         super(Cnn, self).__init__()
         self.encode = CnnEncode(embed_mat)
-        self.match = Match()
+        self.match = Match('cnn')
 
     def forward(self, x, y):
         x = self.encode(x)
@@ -78,7 +78,7 @@ class Rnn(nn.Module):
     def __init__(self, embed_mat):
         super(Rnn, self).__init__()
         self.encode = RnnEncode(embed_mat)
-        self.match = Match()
+        self.match = Match('rnn')
 
     def forward(self, x, y):
         x = self.encode(x)
@@ -91,18 +91,22 @@ class RnnEncode(nn.Module):
         super(RnnEncode, self).__init__()
         vocab_num, embed_len = embed_mat.size()
         self.embed = nn.Embedding(vocab_num, embed_len, _weight=embed_mat)
-        self.ra = nn.LSTM(embed_len, 200, batch_first=True)
+        self.ra = nn.LSTM(embed_len, 200, batch_first=True, bidirectional=True)
+        self.mp = nn.MaxPool1d(seq_len)
 
     def forward(self, x):
         x = self.embed(x)
         h, hc_n = self.ra(x)
-        return h[:, -1, :]
+        h = h.permute(0, 2, 1)
+        x = self.mp(h)
+        return x.view(x.size(0), -1)
 
 
 class Match(nn.Module):
-    def __init__(self):
+    def __init__(self, name):
         super(Match, self).__init__()
-        self.la = nn.Sequential(nn.Linear(800, 200),
+        feat_len = 1600 if name == 'rnn' else 800
+        self.la = nn.Sequential(nn.Linear(feat_len, 200),
                                 nn.ReLU())
         self.dl = nn.Sequential(nn.Dropout(0.2),
                                 nn.Linear(200, 1))

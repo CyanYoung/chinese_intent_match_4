@@ -20,7 +20,7 @@ from util import map_item
 def load_match(name, device):
     model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
-    part = Match().to(device)
+    part = Match(name).to(device)
     part_dict = part.state_dict()
     for part_key in part_dict.keys():
         full_key = 'match.' + part_key
