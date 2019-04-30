@@ -7,3 +7,6 @@
 *.so
 *.out
 __pycache__
+
+# privacy
+data
