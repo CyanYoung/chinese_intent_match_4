@@ -4,7 +4,7 @@ import re
 
 import pandas as pd
 
-from random import shuffle, sample
+from random import shuffle, sample, randint
 
 from util import load_word_re, load_type_re, load_pair, word_replace
 
@@ -17,6 +17,8 @@ stop_word_re = load_word_re(path_stop_word)
 word_type_re = load_type_re(path_type_dir)
 homo_dict = load_pair(path_homo)
 syno_dict = load_pair(path_syno)
+
+aug_rate, pos_rate, neg_rate = 2, 4, 8
 
 
 def save_pair(path, pairs):
@@ -35,44 +37,38 @@ def expand(pairs, path_extra_pair):
     return extra_pairs + pairs
 
 
-def insert(pairs, text, neg_texts, neg_fold):
-    sub_texts = sample(neg_texts, neg_fold)
-    for neg_text in sub_texts:
-        pairs.append((text, neg_text, 0))
-
-
-def make_pair(path_univ_dir, path_pairs):
+def make_pair(path_aug_dir, paths):
     labels = list()
     label_texts = dict()
-    files = os.listdir(path_univ_dir)
+    files = os.listdir(path_aug_dir)
     for file in files:
         label = os.path.splitext(file)[0]
         labels.append(label)
         label_texts[label] = list()
-        with open(os.path.join(path_univ_dir, file), 'r') as f:
+        with open(os.path.join(path_aug_dir, file), 'r') as f:
             for line in f:
                 label_texts[label].append(line.strip())
-    neg_fold = 2
     pairs = list()
     for i in range(len(labels)):
         texts = label_texts[labels[i]]
-        neg_texts = list()
+        res_texts = list()
         for j in range(len(labels)):
             if j != i:
-                neg_texts.extend(label_texts[labels[j]])
-        for j in range(len(texts) - 1):
-            for k in range(j + 1, len(texts)):
-                pairs.append((texts[j], texts[k], 1))
-                sub_texts = sample(neg_texts, neg_fold)
-                for neg_text in sub_texts:
-                    pairs.append((texts[j], neg_text, 0))
+                res_texts.extend(label_texts[labels[j]])
+        for text in texts:
+            pos_texts = sample(texts, pos_rate)
+            for pos_text in pos_texts:
+                pairs.append((text, pos_text, 1))
+            neg_texts = sample(res_texts, neg_rate)
+            for neg_text in neg_texts:
+                pairs.append((text, neg_text, 0))
     shuffle(pairs)
     bound1 = int(len(pairs) * 0.7)
     bound2 = int(len(pairs) * 0.9)
-    train_pairs = expand(pairs[:bound1], path_pairs['extra'])
-    save_pair(path_pairs['train'], train_pairs)
-    save_pair(path_pairs['dev'], pairs[bound1:bound2])
-    save_pair(path_pairs['test'], pairs[bound2:])
+    train_pairs = expand(pairs[:bound1], paths['extra'])
+    save_pair(paths['train'], train_pairs)
+    save_pair(paths['dev'], pairs[bound1:bound2])
+    save_pair(paths['test'], pairs[bound2:])
 
 
 def save(path, texts, labels):
@@ -83,12 +79,12 @@ def save(path, texts, labels):
             f.write(text + ',' + label + '\n')
 
 
-def gather(path_univ_dir, path_train, path_test):
+def gather(path_aug_dir, path_train, path_test):
     texts, labels = list(), list()
-    files = os.listdir(path_univ_dir)
+    files = os.listdir(path_aug_dir)
     for file in files:
         label = os.path.splitext(file)[0]
-        with open(os.path.join(path_univ_dir, file), 'r') as f:
+        with open(os.path.join(path_aug_dir, file), 'r') as f:
             for line in f:
                 texts.append(line.strip())
                 labels.append(label)
@@ -108,7 +104,28 @@ def clean(text):
     return word_replace(text, syno_dict)
 
 
-def prepare(path_univ_dir):
+def augment(text, name):
+    aug_texts = list()
+    bound = len(text) - 1
+    if bound > 0:
+        for _ in range(aug_rate):
+            words = list(text)
+            if name == 'drop':
+                ind = randint(0, bound)
+                words.pop(ind)
+            elif name == 'swap':
+                ind1, ind2 = randint(0, bound), randint(0, bound)
+                words[ind1], words[ind2] = words[ind2], words[ind1]
+            elif name == 'copy':
+                ind1, ind2 = randint(0, bound), randint(0, bound)
+                words.insert(ind1, words[ind2])
+            else:
+                raise KeyError
+            aug_texts.append(''.join(words))
+    return aug_texts
+
+
+def prepare(path_univ_dir, path_aug_dir):
     files = os.listdir(path_univ_dir)
     for file in files:
         text_set = set()
@@ -120,20 +137,24 @@ def prepare(path_univ_dir):
                 if text and text not in text_set:
                     text_set.add(text)
                     texts.append(text)
-        with open(os.path.join(path_univ_dir, file), 'w') as f:
+                    texts.extend(augment(text, 'drop'))
+                    texts.extend(augment(text, 'swap'))
+                    texts.extend(augment(text, 'copy'))
+        with open(os.path.join(path_aug_dir, file), 'w') as f:
             for text in texts:
                 f.write(text + '\n')
 
 
 if __name__ == '__main__':
     path_univ_dir = 'data/univ'
-    prepare(path_univ_dir)
+    path_aug_dir = 'data/aug'
+    prepare(path_univ_dir, path_aug_dir)
     path_train = 'data/train.csv'
     path_test = 'data/test.csv'
-    gather(path_univ_dir, path_train, path_test)
-    path_pairs = dict()
-    path_pairs['train'] = 'data/train_pair.csv'
-    path_pairs['dev'] = 'data/dev_pair.csv'
-    path_pairs['test'] = 'data/test_pair.csv'
-    path_pairs['extra'] = 'data/extra_pair.csv'
-    make_pair(path_univ_dir, path_pairs)
+    gather(path_aug_dir, path_train, path_test)
+    paths = dict()
+    paths['train'] = 'data/train_pair.csv'
+    paths['dev'] = 'data/dev_pair.csv'
+    paths['test'] = 'data/test_pair.csv'
+    paths['extra'] = 'data/extra_pair.csv'
+    make_pair(path_univ_dir, paths)
