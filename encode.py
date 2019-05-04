@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 
 from nn_arch import DnnEncode, CnnEncode, RnnEncode
 
-from util import flat_read, map_item
+from util import map_item
 
 
 def load_encode(name, embed_mat, device):
@@ -37,10 +37,11 @@ with open(path_embed, 'rb') as f:
     embed_mat = pk.load(f)
 
 path_sent = 'feat/sent_train.pkl'
-path_train = 'data/train.csv'
+path_label = 'feat/label_train.pkl'
 with open(path_sent, 'rb') as f:
     sents = pk.load(f)
-labels = flat_read(path_train, 'label')
+with open(path_label, 'rb') as f:
+    labels = pk.load(f)
 
 archs = {'dnn': DnnEncode,
          'cnn': CnnEncode,

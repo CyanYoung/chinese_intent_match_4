@@ -17,6 +17,7 @@ pad_ind, oov_ind = 0, 1
 path_word_vec = 'feat/word_vec.pkl'
 path_word_ind = 'feat/word_ind.pkl'
 path_embed = 'feat/embed.pkl'
+path_label_ind = 'feat/label_ind.pkl'
 
 
 def tran_dict(word_inds, off):
@@ -44,6 +45,15 @@ def embed(sent_words, path_word_ind, path_word_vec, path_embed):
                 embed_mat[ind] = word_vecs[word]
     with open(path_embed, 'wb') as f:
         pk.dump(embed_mat, f)
+
+
+def label2ind(labels, path_label_ind):
+    labels = sorted(list(set(labels)))
+    label_inds = dict()
+    for i in range(len(labels)):
+        label_inds[labels[i]] = i
+    with open(path_label_ind, 'wb') as f:
+        pk.dump(label_inds, f)
 
 
 def sent2ind(words, word_inds, seq_len, keep_oov):
@@ -75,11 +85,18 @@ def vectorize(path_data, path_sent, path_label, mode):
     labels = flat_read(path_data, 'label')
     if mode == 'train':
         embed(sent_words, path_word_ind, path_word_vec, path_embed)
+        label2ind(labels, path_label_ind)
     pad_seqs = align(sent_words)
+    with open(path_label_ind, 'rb') as f:
+        label_inds = pk.load(f)
+    inds = list()
+    for label in labels:
+        inds.append(label_inds[label])
+    inds = np.array(inds)
     with open(path_sent, 'wb') as f:
         pk.dump(pad_seqs, f)
     with open(path_label, 'wb') as f:
-        pk.dump(labels, f)
+        pk.dump(inds, f)
 
 
 def vectorize_pair(path_data, path_pair, path_flag):

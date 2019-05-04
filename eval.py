@@ -4,11 +4,11 @@ import numpy as np
 
 import torch
 
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 from build import tensorize
 
-from match import predict
+from match import ind_labels, predict
 
 from util import flat_read, map_item
 
@@ -31,9 +31,14 @@ with open(path_pair, 'rb') as f:
 with open(path_flag, 'rb') as f:
     flags = pk.load(f)
 
+class_num = len(ind_labels)
+
 paths = {'dnn': 'model/dnn.pkl',
          'cnn': 'model/cnn.pkl',
-         'rnn': 'model/rnn.pkl'}
+         'rnn': 'model/rnn.pkl',
+         'dnn_metric': 'metric/dnn.csv',
+         'cnn_metric': 'metric/cnn.csv',
+         'rnn_metric': 'metric/rnn.csv'}
 
 models = {'dnn': torch.load(map_item('dnn', paths), map_location=device),
           'cnn': torch.load(map_item('cnn', paths), map_location=device),
@@ -60,11 +65,17 @@ def test(name, texts, labels, vote):
     preds = list()
     for text in texts:
         preds.append(predict(text, name, vote))
+    precs = precision_score(labels, preds, average=None)
+    recs = recall_score(labels, preds, average=None)
+    with open(map_item(name + '_metric', paths), 'w') as f:
+        f.write('label,prec,rec' + '\n')
+        for i in range(class_num):
+            f.write('%s,%.2f,%.2f\n' % (ind_labels[i], precs[i], recs[i]))
     f1 = f1_score(labels, preds, average='weighted')
     print('\n%s f1: %.2f - acc: %.2f\n' % (name, f1, accuracy_score(labels, preds)))
     for text, label, pred in zip(texts, labels, preds):
         if label != pred:
-            print('{}: {} -> {}'.format(text, label, pred))
+            print('{}: {} -> {}'.format(text, ind_labels[label], ind_labels[pred]))
 
 
 if __name__ == '__main__':

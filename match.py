@@ -17,6 +17,13 @@ from encode import load_encode
 from util import map_item
 
 
+def ind2label(label_inds):
+    ind_labels = dict()
+    for label, ind in label_inds.items():
+        ind_labels[ind] = label
+    return ind_labels
+
+
 def load_match(name, device):
     model = torch.load(map_item(name, paths), map_location=device)
     full_dict = model.state_dict()
@@ -43,10 +50,15 @@ encode_len = 200
 
 path_word_ind = 'feat/word_ind.pkl'
 path_embed = 'feat/embed.pkl'
+path_label_ind = 'feat/label_ind.pkl'
 with open(path_word_ind, 'rb') as f:
     word_inds = pk.load(f)
 with open(path_embed, 'rb') as f:
     embed_mat = pk.load(f)
+with open(path_label_ind, 'rb') as f:
+    label_inds = pk.load(f)
+
+ind_labels = ind2label(label_inds)
 
 paths = {'dnn': 'model/dnn.pkl',
          'cnn': 'model/cnn.pkl',
@@ -89,7 +101,7 @@ def predict(text, name, vote):
     if __name__ == '__main__':
         formats = list()
         for pred, prob in zip(max_preds, max_probs):
-            formats.append('{} {:.3f}'.format(pred, prob))
+            formats.append('{} {:.3f}'.format(ind_labels[pred], prob))
         return ', '.join(formats)
     else:
         pairs = Counter(max_preds)
