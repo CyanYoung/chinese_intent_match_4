@@ -9,6 +9,24 @@ from random import shuffle, sample, randint
 from util import load_word_re, load_type_re, load_pair, word_replace
 
 
+def drop(words, bound):
+    ind = randint(0, bound)
+    words.pop(ind)
+    return ''.join(words)
+
+
+def swap(words, bound):
+    ind1, ind2 = randint(0, bound), randint(0, bound)
+    words[ind1], words[ind2] = words[ind2], words[ind1]
+    return ''.join(words)
+
+
+def copy(words, bound):
+    ind1, ind2 = randint(0, bound), randint(0, bound)
+    words.insert(ind1, words[ind2])
+    return ''.join(words)
+
+
 path_stop_word = 'dict/stop_word.txt'
 path_type_dir = 'dict/word_type'
 path_homo = 'dict/homo.csv'
@@ -19,6 +37,8 @@ homo_dict = load_pair(path_homo)
 syno_dict = load_pair(path_syno)
 
 aug_rate, pos_rate, neg_rate = 2, 4, 8
+
+funcs = [drop, swap, copy]
 
 
 def save_pair(path, pairs):
@@ -104,24 +124,14 @@ def clean(text):
     return word_replace(text, syno_dict)
 
 
-def augment(text, name):
+def augment(text):
     aug_texts = list()
     bound = len(text) - 1
     if bound > 0:
-        for _ in range(aug_rate):
-            words = list(text)
-            if name == 'drop':
-                ind = randint(0, bound)
-                words.pop(ind)
-            elif name == 'swap':
-                ind1, ind2 = randint(0, bound), randint(0, bound)
-                words[ind1], words[ind2] = words[ind2], words[ind1]
-            elif name == 'copy':
-                ind1, ind2 = randint(0, bound), randint(0, bound)
-                words.insert(ind1, words[ind2])
-            else:
-                raise KeyError
-            aug_texts.append(''.join(words))
+        for func in funcs:
+            for _ in range(aug_rate):
+                words = list(text)
+                aug_texts.append(func(words, bound))
     return aug_texts
 
 
@@ -137,9 +147,7 @@ def prepare(path_univ_dir, path_aug_dir):
                 if text and text not in text_set:
                     text_set.add(text)
                     texts.append(text)
-                    texts.extend(augment(text, 'drop'))
-                    texts.extend(augment(text, 'swap'))
-                    texts.extend(augment(text, 'copy'))
+                    texts.extend(augment(text))
         with open(os.path.join(path_aug_dir, file), 'w') as f:
             for text in texts:
                 f.write(text + '\n')
