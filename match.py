@@ -39,8 +39,8 @@ def load_match(name, device):
 
 def load_cache(path_cache):
     with open(path_cache, 'rb') as f:
-        core_sents = pk.load(f)
-    return core_sents
+        cache_sents = pk.load(f)
+    return cache_sents
 
 
 device = torch.device('cpu')
@@ -51,12 +51,15 @@ encode_len = 200
 path_word_ind = 'feat/word_ind.pkl'
 path_embed = 'feat/embed.pkl'
 path_label_ind = 'feat/label_ind.pkl'
+path_label = 'feat/label_train.pkl'
 with open(path_word_ind, 'rb') as f:
     word_inds = pk.load(f)
 with open(path_embed, 'rb') as f:
     embed_mat = pk.load(f)
 with open(path_label_ind, 'rb') as f:
     label_inds = pk.load(f)
+with open(path_label, 'rb') as f:
+    labels = pk.load(f)
 
 ind_labels = ind2label(label_inds)
 
@@ -81,23 +84,23 @@ models = {'dnn_encode': load_encode('dnn', embed_mat, device),
 
 def predict(text, name, vote):
     text = clean(text)
-    core_sents, core_labels = map_item(name, caches)
-    core_sents = torch.Tensor(core_sents).to(device)
+    cache_sents = map_item(name, caches)
+    cache_sents = torch.Tensor(cache_sents).to(device)
     pad_seq = sent2ind(text, word_inds, seq_len, keep_oov=True)
     sent = torch.LongTensor([pad_seq]).to(device)
     encode = map_item(name + '_encode', models)
     with torch.no_grad():
         encode_seq = encode(sent)
-    encode_mat = encode_seq.repeat(len(core_sents), 1)
+    encode_mat = encode_seq.repeat(len(cache_sents), 1)
     model = map_item(name + '_match', models)
     with torch.no_grad():
         model.eval()
-        probs = torch.sigmoid(model(encode_mat, core_sents))
+        probs = torch.sigmoid(model(encode_mat, cache_sents))
     probs = probs.numpy()
     probs = np.squeeze(probs, axis=-1)
     max_probs = sorted(probs, reverse=True)[:vote]
     max_inds = np.argsort(-probs)[:vote]
-    max_preds = [core_labels[ind] for ind in max_inds]
+    max_preds = [labels[ind] for ind in max_inds]
     if __name__ == '__main__':
         formats = list()
         for pred, prob in zip(max_preds, max_probs):
